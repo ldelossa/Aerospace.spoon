@@ -22,14 +22,14 @@ local defaultHotKeysMapping = {
 	createSpace = { { "alt", "ctrl", "shift" }, "n" },
 	selectSpace = { { "alt" }, "w" },
 	windowToSpace = { { "alt" }, "a" },
-	scratchpad = { { "alt" }, "-"}
+	-- scratchpad = { { "alt" }, "-"}
 }
 
 local hotKeyHandlers = {
 	createSpace = function() obj:createSpace() end,
 	selectSpace = function() obj:selectSpace() end,
 	windowToSpace = function() obj:moveWindowToSpace() end,
-	scratchpad = function() obj:toggleScratchSpace() end
+	-- scratchpad = function() obj:toggleScratchSpace() end
 }
 
 function obj:bindHotkeys(mapping)
@@ -158,7 +158,6 @@ end
 -- Promp the user with a TextPrompt for a label, create a new space, label it
 -- and focus it.
 function obj:createSpace()
-
 	local label = self:simpleTextPrompt("Create a new space",
 		"Provide a label for the space.\nAn empty label will use the next available desktop number.")
 
@@ -181,22 +180,28 @@ function obj:selectSpace()
 		end
 
 		self.client:createOrFocusSpace(choice.space.workspace)
-
 	end)
 end
 
 function obj:moveWindowToSpace()
+	-- get currently focused window
+	local focused = self.client:getFocusedWindow()
+	if not focused then
+		return
+	end
+
 	self:spaceChooser(function(choice)
 		if not choice then
 			return
 		end
 
 		if not choice.space then
-			self.client:currentWindowToSpace(choice.text)
-			return
+			self.client:windowToSpace(focused["window-id"], choice.text)
+			self.client:createOrFocusSpace(choice.text)
+		else
+			self.client:windowToSpace(focused["window-id"], choice.space.workspace)
+			self.client:createOrFocusSpace(choice.space.workspace)
 		end
-
-		self.client:currentWindowToSpace(choice.space.workspace)
 
 	end)
 end
