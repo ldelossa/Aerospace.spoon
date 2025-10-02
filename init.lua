@@ -9,7 +9,6 @@ obj.homepage = "https://github.com/ldelossa/AerospaceSpoon"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 -- fields
-obj.logger = hs.logger.new('Aerospace', 'debug')
 obj.client = dofile(hs.spoons.resourcePath("client.lua"))
 
 obj.registry = {
@@ -22,7 +21,6 @@ obj.registry = {
 local defaultHotKeysMapping = {
 	createSpace = { { "alt", "ctrl", "shift" }, "n" },
 	selectSpace = { { "alt" }, "w" },
-	labelSpace = { { "alt" }, "r" },
 	windowToSpace = { { "alt" }, "a" },
 	scratchpad = { { "alt" }, "-"}
 }
@@ -110,12 +108,10 @@ end
 function obj:spaceChooser(cb)
 	local spaces = self.client:getSpaces()
 	if not spaces then
-		self.logger.ef("Failed to retrieve spaces")
 		return
 	end
 
 	if #spaces == 0 then
-		self.logger.df("No spaces found")
 		return
 	end
 
@@ -162,7 +158,6 @@ end
 -- Promp the user with a TextPrompt for a label, create a new space, label it
 -- and focus it.
 function obj:createSpace()
-	self.logger.d("Creating a new space")
 
 	local label = self:simpleTextPrompt("Create a new space",
 		"Provide a label for the space.\nAn empty label will use the next available desktop number.")
@@ -170,16 +165,12 @@ function obj:createSpace()
 	if not label then return end
 
 	self.client:createSpace(label, true)
-	self.logger.df("Created new space with label: %s", label)
 end
 
 -- Prompt the user with a chooser to select a space to focus.
 function obj:selectSpace()
-	self.logger.d("Selecting a space")
-
 	self:spaceChooser(function(choice)
 		if not choice then
-			self.logger.df("User canceled space selection")
 			return
 		end
 
@@ -191,14 +182,12 @@ function obj:selectSpace()
 
 		self.client:createOrFocusSpace(choice.space.workspace)
 
-		self.logger.df("Focused space with label: %s", choice.text)
 	end)
 end
 
 function obj:moveWindowToSpace()
 	self:spaceChooser(function(choice)
 		if not choice then
-			self.logger.df("User canceled space selection")
 			return
 		end
 
@@ -209,7 +198,6 @@ function obj:moveWindowToSpace()
 
 		self.client:currentWindowToSpace(choice.space.workspace)
 
-		self.logger.df("Focused space with label: %s", choice.text)
 	end)
 end
 
@@ -229,7 +217,6 @@ function obj:toggleScratchSpace()
 	-- this relies on aersospace window detection to detect the window, place
 	-- it in a .scratchpad workspace, and make it floating.
 	if not scratchpad then
-		self.logger.d("Creating a new scratchpad")
 		hs.execute(scratchCmd, false)
 		return
 	end
@@ -238,14 +225,12 @@ function obj:toggleScratchSpace()
 	-- move it away to .scratchpad workspace.
 	local focused = self.client:getFocusedWindow()
 	if focused ~= nil and focused["window-id"] == scratchpad["window-id"] then
-		self.logger.d("Hiding the scratchpad")
 		self.client:windowToSpace(scratchpad["window-id"], ".scratchpad")
 		return
 	end
 
 	-- focused window is not the scratchpad, so we want to summon it.
 	-- lets move the scratchpad to the focused space
-	self.logger.d("Summoning the scratchpad")
 	self.client:windowToSpace(scratchpad["window-id"], focused_space.workspace)
 	self.client:focusWindow(scratchpad["window-id"])
 	return
